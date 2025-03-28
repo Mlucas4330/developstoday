@@ -1,23 +1,24 @@
 import env from '../utils/env'
 import { Index, Pinecone, PineconeRecord } from '@pinecone-database/pinecone'
+import Singleton from '../utils/Singleton'
 import openaiService from './openai'
 
-class PineconeService {
+class PineconeService extends Singleton<PineconeService> {
     private pc: Pinecone
     private indexName: string
     private index?: Index
 
-    constructor(indexName: string) {
+    constructor() {
+        super()
         this.pc = new Pinecone({ apiKey: env.pinecone_api_key })
-        this.indexName = indexName
+        this.indexName = 'developstoday'
     }
 
-    public async createIndex(): Promise<void> {
+    private async createIndex() {
         await this.pc.createIndex({
             name: this.indexName,
             dimension: 1536,
             metric: 'cosine',
-            suppressConflicts: true,
             waitUntilReady: true,
             spec: {
                 serverless: {
@@ -26,43 +27,28 @@ class PineconeService {
                 }
             }
         })
-        
-        await this.initializeIndex()
     }
 
-    private async initializeIndex(): Promise<void> {
-        this.index = this.pc.Index(this.indexName)
+    public async initializeIndex() {
+        const response = await this.pc.listIndexes()
+
+        const index = response.indexes?.find(item => item.name === this.indexName)
+
+        if (!index) {
+            await this.createIndex()
+        }
+
+        this.index = this.pc.index(this.indexName)
     }
 
     public async searchRecords(text: string) {
-        if (!this.index) {
-            throw new Error('Index is not initialized. Call `createIndex()` first.')
-        }
-
-        const values = await openaiService.embedContent(text)
-
-        const response = await this.index.searchRecords({
-            query: {
-                vector: {
-                    values
-                },
-                topK: 1
-            },
-            fields: ['url', 'title', 'date', 'content']
-        })
-
-        return response
+        const vector = await openaiService.embedContent(text)
+        return await this.index?.query({ vector, topK: 3, includeMetadata: true })
     }
 
-    public async upsert(record: PineconeRecord): Promise<void> {
-        if (!this.index) {
-            throw new Error('Index is not initialized. Call `createIndex()` first.')
-        }
-
-        await this.index.upsert([record])
+    public async upsert(record: PineconeRecord) {
+        await this.index?.upsert([record])
     }
 }
 
-const pineconeService = new PineconeService('developstoday')
-
-export default pineconeService
+export default PineconeService.getInstance()

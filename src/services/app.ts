@@ -1,39 +1,44 @@
 import express, { Application, json, Request, Response, urlencoded } from 'express'
+import Singleton from '../utils/Singleton'
 import pineconeService from './pinecone'
 import openaiService from './openai'
-import { SearchRecordsResponse } from '@pinecone-database/pinecone'
 
-class AppService {
+class AppService extends Singleton<AppService> {
     public app: Application
 
     constructor() {
+        super()
         this.app = express()
         this.middlewares()
         this.routes()
     }
 
-    private middlewares(): void {
+    private middlewares() {
         this.app.use(json())
         this.app.use(urlencoded({ extended: true }))
     }
 
-    private routes(): void {
+    private routes() {
         this.app.post('/agent', async (req: Request, res: Response) => {
             try {
                 const { query } = req.body
 
-                const sources = await pineconeService.searchRecords(query)
+                const response = await pineconeService.searchRecords(query)
 
-                const extractedContext = sources.result.hits.map((hit: any) => hit.fields?.content).join("\n")
+                if (!response) return
+
+                const extractedContext = response.matches
+                    .map(match => match.metadata?.content)
+                    .join('\n')
 
                 const answer = await openaiService.extractContent(extractedContext, query)
 
                 res.json({
                     answer,
-                    sources: sources.result.hits.map((hit: any) => ({
-                        title: hit.fields?.title,
-                        url: hit.fields?.url,
-                        date: hit.fields?.date
+                    sources: response.matches.map(match => ({
+                        title: match.metadata?.title,
+                        url: match.metadata?.url,
+                        date: match.metadata?.date
                     }))
                 })
             } catch (error) {
@@ -42,11 +47,9 @@ class AppService {
         })
     }
 
-    public listen(port: number): void {
+    public listen(port: number) {
         this.app.listen(port)
     }
 }
 
-const appService = new AppService()
-
-export default appService
+export default AppService.getInstance()

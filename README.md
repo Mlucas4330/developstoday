@@ -26,7 +26,7 @@ Object-Oriented Design
 
 I chose Object-Oriented Design (OOD) for this project to keep the code modular, readable, and easy to maintain. By separating different functionalities into distinct classes, I was able to isolate the concerns of different parts of the system, making the codebase more manageable.
 
-Separation of Concerns: Each class has a single responsibility, whether it’s handling communication with Pinecone, interacting with OpenAI through LangChain, or dealing with the logic for message generation.
+Separation of Concerns: Each class has a single responsibility, whether it's handling communication with Pinecone, interacting with OpenAI through LangChain, or dealing with the logic for message generation.
 
 Code Reusability: The classes are designed in a way that they can be reused or extended in the future with minimal changes to existing code.
 
@@ -52,11 +52,11 @@ Why Pinecone?
 
 Pinecone was chosen for vector database search due to its simplicity and powerful features for working with large datasets.
 
-Easy to Use: Pinecone’s API is straightforward, making it quick to implement and easy to understand.
+Easy to Use: Pinecone's API is straightforward, making it quick to implement and easy to understand.
 
-Debugging: Pinecone’s user-friendly interface and easy-to-use API enable quick debugging and help in tracking the performance of queries.
+Debugging: Pinecone's user-friendly interface and easy-to-use API enable quick debugging and help in tracking the performance of queries.
 
 Scalability: Pinecone is designed for scalability, allowing you to handle growing amounts of data efficiently as the project grows.
 
-Integration with AI Models: Pinecone’s ability to store and search vector embeddings works well when combined with language models like OpenAI, making it a great fit for projects that require semantic search.
+Integration with AI Models: Pinecone's ability to store and search vector embeddings works well when combined with language models like OpenAI, making it a great fit for projects that require semantic search.
 

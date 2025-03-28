@@ -4,9 +4,7 @@ import pineconeService from './services/pinecone'
 
 const main = async () => {
     try {
-
         appService.listen(3000)
-
         await kafkaService.initialize()
         await pineconeService.initializeIndex()
     } catch (error) {
